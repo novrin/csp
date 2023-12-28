@@ -16,7 +16,7 @@ const (
 	WebRTCBlock = "'block'"
 )
 
-// Acceptable keyword sources used in directive values.
+// Acceptable keyword-sources used in directive values.
 const (
 	SourceNone                 = "'none'"
 	SourceSelf                 = "'self'"
@@ -56,9 +56,9 @@ var CName = map[string]string{
 	"WorkerSrc":      "worker-src",
 }
 
-// IsKeywordSource returns true if s is a valid keyword source used in directive
-// values. As of Content Security Policy Level 3, they are required to be
-// enclosed in single-quotes.
+// IsKeywordSource returns true if s is a valid keyword-source as described in
+// Content Security Policy Level 3; they are required to be enclosed in
+// single-quotes.
 func IsKeywordSource(s string) bool {
 	sources := []string{
 		SourceNone,
@@ -77,7 +77,7 @@ func IsKeywordSource(s string) bool {
 }
 
 // canon returns s trimmed of leading and trailing white space. If s is a
-// keyword source, it is also lowered and enclosed in single-quotes.
+// keyword-source, it is also lowered and enclosed in single-quotes.
 func canon(s string) string {
 	c := strings.TrimSpace(s)
 	if kw := "'" + strings.ToLower(c) + "'"; IsKeywordSource(kw) {
@@ -87,7 +87,7 @@ func canon(s string) string {
 }
 
 // canons returns a slice of strings where every s in ss is trimmed of leading
-// and trailing white space. If s a keyword sources, it is also lowered and
+// and trailing white space. If s a keyword-source, it is also lowered and
 // enclosed in single-quotes.
 func canons(ss []string) []string {
 	cs := make([]string, len(ss))
@@ -97,33 +97,108 @@ func canons(ss []string) []string {
 	return cs
 }
 
-// Directives represent possible Content Security Policy rules.
+// Directives represent possible Content Security Policy rules that enable
+// developers to manage particular features of their websites.
 type Directives struct {
-	BaseURI        []string
-	ChildSrc       []string
-	ConnectSrc     []string
-	DefaultSrc     []string
-	FontSrc        []string
-	FormAction     []string
+	// (base-uri) BaseURI is a document directive that restricts the URLs which
+	// can be used in a HTML <base> element.
+	BaseURI []string
+
+	// (child-src) ChildSrc is a fetch directive that restricts the sources for
+	// child navigables such as <frame> and <iframe> and Worker execution
+	// contexts.
+	ChildSrc []string
+
+	// (connect-src) ConnectSrc is a fetch directive that restricts the URLs
+	// which can be loaded using script interfaces (e.g. fetch(), <a ping>, XHR,
+	// EventSource, WebSockets). If not allowed, the browser emulates a 400 Bad
+	// Request HTTP status code.
+	ConnectSrc []string
+
+	// (default-src) DefaultSrc is a fetch directive that serves as the fallback
+	// for other fetch directives.
+	DefaultSrc []string
+
+	// (font-src) FontSrc is a fetch directive that restricts the URLs from
+	// which font resources may be loaded.
+	FontSrc []string
+
+	// (form-action) FormAction is a navigation directive that restricts the
+	// URLs which can be used as the target of a form submissions from a given
+	// context.
+	FormAction []string
+
+	// (frame-ancestors) FrameAncestors is a navigation directive that restricts
+	// the URLS which can embed the resource using <frame>, <iframe>, <object>,
+	// or <embed>.
 	FrameAncestors []string
-	FrameSrc       []string
-	ImgSrc         []string
-	ManifestSrc    []string
-	MediaSrc       []string
-	ObjectSrc      []string
-	ReportTo       string
-	Sandbox        string
-	ScriptSrc      []string
-	ScriptSrcAttr  []string
-	ScriptSrcElem  []string
-	StyleSrc       []string
-	StyleSrcAttr   []string
-	StyleSrcElem   []string
-	WebRTC         string
-	WorkerSrc      []string
+
+	// (frame-src) FrameSrc is a fetch directive that restricts the URLs which
+	// may be loaded into child navigables.
+	FrameSrc []string
+
+	// (img-src) ImgSrc is a fetch directive that restricts the URLs from which
+	// image resources may be loaded.
+	ImgSrc []string
+
+	// (manifest-src) ManifestSrc is a fetch directive that restricts the URLs
+	// from which application manifests may be loaded.
+	ManifestSrc []string
+
+	// (media-src) MediaSrc is a fetch directive that restricts the URLs from
+	// which video, audio, and associated text track resources may be loaded.
+	MediaSrc []string
+
+	// (object-src) ObjectSrc is a fetch directive that restricts the URLs from
+	// which plugin content may be loaded.
+	ObjectSrc []string
+
+	// (report-to) ReportTo is a reporting directive that defines an endpoint to
+	// which violation reports should be sent.
+	ReportTo string
+
+	// (sandbox) Sandbox is a navigation directive that specifies an HTML
+	// sandbox policy which the user agent will apply to a resource, as if it
+	// had been included in an <iframe> with a sandbox property.
+	Sandbox string
+
+	// (script-src) ScriptSrc is a fetch directive that restricts the locations
+	// from which scripts may be executed and serves as a default fallback for
+	// all script-like destinations.
+	ScriptSrc []string
+
+	// (script-src-attr) ScriptSrcAttr is a fetch directive that applies to
+	// event handlers and, if present, it will override the script-src directive
+	// for relevant checks.
+	ScriptSrcAttr []string
+
+	// (script-src-elem) ScriptSrcElem is a fetch directive that applies to all
+	// script requests and script blocks.
+	ScriptSrcElem []string
+
+	// (style-src) StyleSrc is a fetch directive that restricts the locations
+	// from which style may be applied to a Document.
+	StyleSrc []string
+
+	// (style-src-attr) StyleSrcAttr is a fetch directive that governs the
+	// behaviour of style attributes.
+	StyleSrcAttr []string
+
+	// (style-src-elem) StyleSrcElem is a fetch directive that governs the
+	// behaviour of styles except for styles defined in inline attributes.
+	StyleSrcElem []string
+
+	// (webrtc) WebRTC is a directive that restricts whether connections may be
+	// established via WebRTC - possible values are "'allow'" or "'block'".
+	WebRTC string
+
+	// (worker-src) WorkerSrc is a directive that restricts the URLs which may
+	// be loaded as a Worker, SharedWorker, or ServiceWorker.
+	WorkerSrc []string
 }
 
-// Policy returns a white space joined string of policy of directives.
+// Policy returns a white space joined string of all directives where each
+// directive ends in a semi-colon.
 func Policy(ds Directives) string {
 	const dFormat = "%s %s; "
 	var policy strings.Builder
@@ -146,8 +221,8 @@ func Policy(ds Directives) string {
 	return strings.TrimSpace(policy.String())
 }
 
-// Basic returns a simple, non-strict CSP policy where 'self' is set on the
-// following directives:
+// Basic returns a simple, non-strict CSP policy where sources is restricted to
+// 'self' for the following directives:
 //   - default-src
 //   - form-action
 //   - frame-ancestors
@@ -161,8 +236,8 @@ func Basic() string {
 }
 
 // BasicTight returns a tightened form of the simple, non-strict CSP policy
-// where default-src is set to 'none', and 'self' is set on the following
-// directives:
+// where sources is restricted to 'none' as a fallback and restricted to 'self'
+// for following directives:
 //   - connect-src
 //   - form-action
 //   - frame-ancestors
