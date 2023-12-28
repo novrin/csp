@@ -4,11 +4,11 @@
 ![tests](https://github.com/novrin/csp/workflows/tests/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/novrin/csp)](https://goreportcard.com/report/github.com/novrin/csp)
 
-`csp` is a tiny Go (golang) library to create Content-Security-Policy HTTP headers.
+`csp` is a tiny Go library that makes it easy to craft Content-Security-Policy HTTP headers.
 
 ### Features
 
-* **Tiny** - less than 200 LOC and no external dependencies
+* **Tiny** - less than 300 LOC and no external dependencies
 * **Simple** - easy to use API
 
 ### Installation
@@ -44,7 +44,7 @@ func SecureHeader(next http.Handler) http.Handler {
 }
 ```
 
-Better yet, use convenience defaults. Basic sets 'self' as the value for default-src, form-action, and frame-ancestors.
+Optionally use convenience defaults. For example, `Basic` is a simple, non-strict CSP policy where sources is restricted to 'self' for the default-src,form-action, and frame-ancestors directives.
 
 ```go
 func SecureHeader(next http.Handler) http.Handler {
