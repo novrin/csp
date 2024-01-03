@@ -6,14 +6,13 @@ import (
 	"testing"
 )
 
-const errorString = "\nGot:\t%v\nWanted:\t%v\n"
+const errorString = "\nGot:\t%v\nWant:\t%v\n"
 
 func TestIsKeyWordSource(t *testing.T) {
-	type unit struct {
+	cases := map[string]struct {
 		vals []string
 		want bool
-	}
-	cases := map[string]unit{
+	}{
 		"no keywords": {
 			vals: []string{"*", "https:", "example.com"},
 			want: false,
@@ -27,12 +26,11 @@ func TestIsKeyWordSource(t *testing.T) {
 			want: true,
 		},
 	}
-	for name, tc := range cases {
-		for i, v := range tc.vals {
+	for name, c := range cases {
+		for i, v := range c.vals {
 			t.Run(fmt.Sprintf("%s %d", name, i), func(t *testing.T) {
-				got := IsKeywordSource(v)
-				if got != tc.want {
-					t.Fatalf(errorString, got, tc.want)
+				if got := IsKeywordSource(v); got != c.want {
+					t.Fatalf(errorString, got, c.want)
 				}
 			})
 		}
@@ -40,11 +38,10 @@ func TestIsKeyWordSource(t *testing.T) {
 }
 
 func TestCanon(t *testing.T) {
-	type unit struct {
+	cases := map[string]struct {
 		vals []string
 		want string
-	}
-	cases := map[string]unit{
+	}{
 		"no keywords": {
 			vals: []string{"example.com/FooBar", "  example.com/FooBar     "},
 			want: "example.com/FooBar",
@@ -54,12 +51,11 @@ func TestCanon(t *testing.T) {
 			want: "'self'",
 		},
 	}
-	for name, tc := range cases {
-		for i, v := range tc.vals {
+	for name, c := range cases {
+		for i, v := range c.vals {
 			t.Run(fmt.Sprintf("%s %d", name, i), func(t *testing.T) {
-				got := canon(v)
-				if got != tc.want {
-					t.Fatalf(errorString, got, tc.want)
+				if got := canon(v); got != c.want {
+					t.Fatalf(errorString, got, c.want)
 				}
 			})
 		}
@@ -67,11 +63,10 @@ func TestCanon(t *testing.T) {
 }
 
 func TestCanons(t *testing.T) {
-	type unit struct {
+	cases := map[string]struct {
 		vals []string
 		want []string
-	}
-	cases := map[string]unit{
+	}{
 		"no keywords": {
 			vals: []string{"*", "  example.com/FooBar     "},
 			want: []string{"*", "example.com/FooBar"},
@@ -81,22 +76,20 @@ func TestCanons(t *testing.T) {
 			want: []string{"'unsafe-inline'", "https://example.com"},
 		},
 	}
-	for name, tc := range cases {
+	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			got := canons(tc.vals)
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf(errorString, got, tc.want)
+			if got := canons(c.vals); !reflect.DeepEqual(got, c.want) {
+				t.Fatalf(errorString, got, c.want)
 			}
 		})
 	}
 }
 
 func TestPolicy(t *testing.T) {
-	type unit struct {
+	cases := map[string]struct {
 		directives Directives
 		want       string
-	}
-	cases := map[string]unit{
+	}{
 		"single": {
 			directives: Directives{
 				DefaultSrc: []string{"acme.com", "example.com"},
@@ -112,28 +105,34 @@ func TestPolicy(t *testing.T) {
 			want: "default-src 'self'; report-to jd@example.com; style-src 'self' example.com;",
 		},
 	}
-	for name, tc := range cases {
+	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
-			got := Policy(tc.directives)
-			if got != tc.want {
-				t.Fatalf(errorString, got, tc.want)
+			if got := Policy(c.directives); got != c.want {
+				t.Fatalf(errorString, got, c.want)
 			}
 		})
 	}
 }
 
-func TestBasic(t *testing.T) {
-	want := "default-src 'self'; form-action 'self'; frame-ancestors 'self';"
-	got := Basic()
-	if got != want {
-		t.Errorf(errorString, got, want)
+func TestBasicAndBasicTight(t *testing.T) {
+	cases := map[string]struct {
+		policy string
+		want   string
+	}{
+		"basic": {
+			policy: Basic(),
+			want:   "default-src 'self'; form-action 'self'; frame-ancestors 'self';",
+		},
+		"basic tight": {
+			policy: BasicTight(),
+			want:   "connect-src 'self'; default-src 'none'; form-action 'self'; frame-ancestors 'self'; img-src 'self'; script-src 'self'; style-src 'self';",
+		},
 	}
-}
-
-func TestBasicTight(t *testing.T) {
-	want := "connect-src 'self'; default-src 'none'; form-action 'self'; frame-ancestors 'self'; img-src 'self'; script-src 'self'; style-src 'self';"
-	got := BasicTight()
-	if got != want {
-		t.Errorf(errorString, got, want)
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			if c.policy != c.want {
+				t.Fatalf(errorString, c.policy, c.want)
+			}
+		})
 	}
 }
